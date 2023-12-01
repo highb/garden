@@ -1,6 +1,6 @@
 ---
 title: Kubernetes
-order: 2
+order: 1
 ---
 
 # Kubernetes
@@ -211,6 +211,7 @@ name: api
 kind: Deploy
 type: kubernetes
 name: api
+dependencies: [build.api]
 spec:
   files: [my-manifests.yml]
   patchResources:
@@ -270,6 +271,7 @@ name: api
 kind: Deploy
 type: kubernetes
 name: api
+dependencies: [build.api]
 spec:
   files: [my-manifests.yml]
   manifests:
