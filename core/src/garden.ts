@@ -260,9 +260,16 @@ export class Garden {
   public log: Log
   private gardenInitLog?: Log
   private loadedPlugins?: GardenPluginSpec[]
+
+  /**
+   * These 3 fields store the raw action configs,
+   * i.e. unresolved action-, module-, and workflow configs detected by {@link #scanAndAddConfigs}
+   * loaded from the disk.
+   */
   protected readonly actionConfigs: ActionConfigMap
   protected readonly moduleConfigs: ModuleConfigMap
   protected readonly workflowConfigs: WorkflowConfigMap
+
   protected configPaths: Set<string>
   private resolvedProviders: { [key: string]: Provider }
   protected readonly state: GardenInstanceState
@@ -1093,7 +1100,7 @@ export class Garden {
     // Resolve configs to Actions
     const linkedSources = keyBy(await getLinkedSources(this, "action"), "name")
 
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden: this,
       configs: Object.values(actionConfigs),
       groupConfigs: moduleGroups,

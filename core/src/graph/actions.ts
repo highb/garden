@@ -88,8 +88,8 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
   actionModes: ActionModeMap
   linkedSources: LinkedSourceMap
   actionsFilter?: string[]
-}): Promise<MutableConfigGraph> {
-  const configsByKey: ActionConfigsByKey = {}
+}): Promise<{ graph: MutableConfigGraph; actionConfigsByKey: ActionConfigsByKey }> {
+  const actionConfigsByKey: ActionConfigsByKey = {}
 
   function addConfig(config: ActionConfig) {
     if (!actionKinds.includes(config.kind)) {
@@ -97,7 +97,7 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
     }
 
     const key = actionReferenceToString(config)
-    const existing = configsByKey[key]
+    const existing = actionConfigsByKey[key]
 
     if (existing) {
       if (actionIsDisabled(config, garden.environmentName)) {
@@ -105,13 +105,13 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
         return
       } else if (actionIsDisabled(existing, garden.environmentName)) {
         log.silly(() => `Skipping disabled action ${key} in favor of other action with same key`)
-        configsByKey[key] = config
+        actionConfigsByKey[key] = config
         return
       } else {
         throw actionNameConflictError(existing, config, garden.projectRoot)
       }
     }
-    configsByKey[key] = config
+    actionConfigsByKey[key] = config
   }
 
   configs.forEach(addConfig)
@@ -141,7 +141,7 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
 
   const preprocessActions = async (predicate: (config: ActionConfig) => boolean = () => true) => {
     return await Promise.all(
-      Object.entries(configsByKey).map(async ([key, config]) => {
+      Object.entries(actionConfigsByKey).map(async ([key, config]) => {
         if (!predicate(config)) {
           return
         }
@@ -153,7 +153,7 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
         preprocessResults[key] = await preprocessActionConfig({
           garden,
           config,
-          configsByKey,
+          configsByKey: actionConfigsByKey,
           actionTypes,
           definition,
           router,
@@ -296,7 +296,7 @@ export const actionConfigsToGraph = profileAsync(async function actionConfigsToG
 
   graph.validate()
 
-  return graph
+  return { graph, actionConfigsByKey }
 })
 
 function getActionMode(config: ActionConfig, actionModes: ActionModeMap, log: Log) {

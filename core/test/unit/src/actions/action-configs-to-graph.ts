@@ -35,7 +35,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("resolves a Build action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -66,7 +66,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("resolves a Deploy action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -97,7 +97,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("resolves a Run action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -128,7 +128,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("resolves a Test action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -159,7 +159,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("resolves actions in groups", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [
@@ -197,7 +197,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("adds dependencies from copyFrom on Build actions", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -244,7 +244,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("adds build reference on runtime actions as dependency", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -291,7 +291,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("adds implicit dependencies from template references in config", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -340,7 +340,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("flags implicit dependency as needing execution if a non-static output is referenced", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -389,7 +389,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("does not mark an implicit dependency needing execution if a static output of dependency is referenced", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -438,7 +438,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("correctly sets compatibleTypes for an action type with no base", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -466,7 +466,7 @@ describe("actionConfigsToGraph", () => {
 
   // TODO-G2
   it.skip("correctly sets compatibleTypes for an action type with a base", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -493,7 +493,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("sets variables for the action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -529,7 +529,7 @@ describe("actionConfigsToGraph", () => {
       projectName: "${project.name}",
     })
 
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -563,7 +563,7 @@ describe("actionConfigsToGraph", () => {
       projectName: "${project.name}",
     })
 
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -598,7 +598,7 @@ describe("actionConfigsToGraph", () => {
       bar: "BAR",
     })
 
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -653,7 +653,7 @@ describe("actionConfigsToGraph", () => {
         },
       })
 
-      const graph = await actionConfigsToGraph({
+      const { graph } = await actionConfigsToGraph({
         garden,
         log,
         groupConfigs: [],
@@ -696,7 +696,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("sets sync mode correctly if explicitly set in actionModes", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -729,7 +729,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("sets local mode correctly if explicitly set in actionModes", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -759,7 +759,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("prefers local mode over sync mode", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -795,7 +795,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("sets mode if matched in full wildcard", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -825,7 +825,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("sets mode if matched in partial wildcard", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -855,7 +855,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("deploy action mode overrides the mode of a dependency build action", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -965,7 +965,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("allows two actions with same key if one is disabled (disabled comes in first)", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -1002,7 +1002,7 @@ describe("actionConfigsToGraph", () => {
   })
 
   it("allows two actions with same key if one is disabled (disabled comes in second)", async () => {
-    const graph = await actionConfigsToGraph({
+    const { graph } = await actionConfigsToGraph({
       garden,
       log,
       groupConfigs: [],
@@ -1041,7 +1041,7 @@ describe("actionConfigsToGraph", () => {
   describe("action with source.repository.url set", () => {
     it("sets the base path to the local cloned path when a repositoryUrl is specified", async () => {
       const repoUrl = "https://github.com/garden-io/garden-example-remote-module-jworker.git#main"
-      const graph = await actionConfigsToGraph({
+      const { graph } = await actionConfigsToGraph({
         garden,
         log,
         groupConfigs: [],
@@ -1102,7 +1102,7 @@ describe("actionConfigsToGraph", () => {
     })
 
     it("sets include and exclude", async () => {
-      const graph = await actionConfigsToGraph({
+      const { graph } = await actionConfigsToGraph({
         ...getBaseParams({
           include: ["include-file"],
           exclude: ["exclude-file"],
@@ -1115,7 +1115,7 @@ describe("actionConfigsToGraph", () => {
     })
 
     it("sets include to [] if all is excluded", async () => {
-      const graph = await actionConfigsToGraph({
+      const { graph } = await actionConfigsToGraph({
         ...getBaseParams({
           include: undefined,
           exclude: ["**/*", "some-thing-else"],
