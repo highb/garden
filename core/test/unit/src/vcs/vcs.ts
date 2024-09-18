@@ -13,7 +13,7 @@ import type {
   NamedTreeVersion,
   TreeVersion,
   TreeVersions,
-  VcsFile,
+  VcsFileWithLazyHash,
 } from "../../../../src/vcs/vcs.js"
 import {
   describeConfig,
@@ -50,7 +50,7 @@ export class TestVcsHandler extends VcsHandler {
     return "/foo"
   }
 
-  override async getFiles(_: GetFilesParams): Promise<VcsFile[]> {
+  override async getFiles(_: GetFilesParams): Promise<VcsFileWithLazyHash[]> {
     return []
   }
 
@@ -98,9 +98,9 @@ describe("VcsHandler", () => {
     it("should sort the list of files in the returned version", async () => {
       const moduleConfig = await gardenA.resolveModule("module-a")
       handlerA.getFiles = async () => [
-        { path: "c", hash: "c" },
-        { path: "b", hash: "b" },
-        { path: "d", hash: "d" },
+        { path: "c", hash: () => Promise.resolve("c") },
+        { path: "b", hash: () => Promise.resolve("b") },
+        { path: "d", hash: () => Promise.resolve("d") },
       ]
       const version = await handlerA.getTreeVersion({
         log: gardenA.log,
@@ -113,9 +113,9 @@ describe("VcsHandler", () => {
     it("should not include the module config file in the file list", async () => {
       const moduleConfig = await gardenA.resolveModule("module-a")
       handlerA.getFiles = async () => [
-        { path: moduleConfig.configPath!, hash: "c" },
-        { path: "b", hash: "b" },
-        { path: "d", hash: "d" },
+        { path: moduleConfig.configPath!, hash: () => Promise.resolve("c") },
+        { path: "b", hash: () => Promise.resolve("b") },
+        { path: "d", hash: () => Promise.resolve("d") },
       ]
       const version = await handlerA.getTreeVersion({
         log: gardenA.log,

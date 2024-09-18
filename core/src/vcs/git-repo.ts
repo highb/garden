@@ -12,7 +12,7 @@ import type {
   BaseIncludeExcludeFiles,
   GetFilesParams,
   IncludeExcludeFilesHandler,
-  VcsFile,
+  VcsFileWithLazyHash,
   VcsHandlerParams,
 } from "./vcs.js"
 import { isDirectory, matchPath } from "../util/fs.js"
@@ -95,7 +95,7 @@ export class GitRepoHandler extends AbstractGitHandler {
    * path directly, we scan the entire enclosing git repository, cache that file list and then filter down to the
    * sub-path. This results in far fewer git process calls but in turn collects more data in memory.
    */
-  override async getFiles(params: GetFilesParams): Promise<VcsFile[]> {
+  override async getFiles(params: GetFilesParams): Promise<VcsFileWithLazyHash[]> {
     const { log, pathDescription, path: rawPath } = params
 
     if (!(await pathExists(rawPath))) {
@@ -146,7 +146,7 @@ export class GitRepoHandler extends AbstractGitHandler {
     })
     const filteredFilesCacheKey = ["git-repo-files", path, hashedFilterParams]
 
-    const cached = this.cache.get(log, filteredFilesCacheKey) as VcsFile[] | undefined
+    const cached = this.cache.get(log, filteredFilesCacheKey) as VcsFileWithLazyHash[] | undefined
     if (cached) {
       this.profiler.inc("VcsHandler.TreeCache.hits")
       return cached
@@ -198,12 +198,12 @@ export class GitRepoHandler extends AbstractGitHandler {
     filter,
   }: {
     log: GetFilesParams["log"]
-    files: VcsFile[]
+    files: VcsFileWithLazyHash[]
     path: string
     augmentedIncludes: string[]
     augmentedExcludes: string[]
     filter: GetFilesParams["filter"]
-  }): VcsFile[] {
+  }): VcsFileWithLazyHash[] {
     return files.filter(({ path: p }) => {
       if (filter && !filter(p)) {
         return false

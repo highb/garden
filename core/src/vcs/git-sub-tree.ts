@@ -24,6 +24,7 @@ import type {
   GetFilesParams,
   IncludeExcludeFilesHandler,
   VcsFile,
+  VcsFileWithLazyHash,
   VcsHandlerParams,
 } from "./vcs.js"
 import { normalize } from "path"
@@ -87,7 +88,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
    * Returns a list of files, along with file hashes, under the given path, taking into account the configured
    * .ignore files, and the specified include/exclude filters.
    */
-  override async getFiles(params: GetFilesParams): Promise<VcsFile[]> {
+  override async getFiles(params: GetFilesParams): Promise<VcsFileWithLazyHash[]> {
     if (params.include && params.include.length === 0) {
       // No need to proceed, nothing should be included
       return []
@@ -120,7 +121,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
     }
     const { exclude, hasIncludes, include } = await getIncludeExcludeFiles(params)
 
-    let files: VcsFile[] = []
+    let files: VcsFileWithLazyHash[] = []
 
     const git = new GitCli({ log: gitLog, cwd: path, failOnPrompt })
     const gitRoot = await this.getRepoRoot(gitLog, path, failOnPrompt)
@@ -162,7 +163,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
       gitLog.silly(`Submodules listed at ${submodules.map((s) => `${s.path} (${s.url})`).join(", ")}`)
     }
 
-    let submoduleFiles: Promise<VcsFile[]>[] = []
+    let submoduleFiles: Promise<VcsFileWithLazyHash[]>[] = []
 
     // We start processing submodule paths in parallel
     // and don't await the results until this level of processing is completed
@@ -223,17 +224,24 @@ export class GitSubTreeHandler extends AbstractGitHandler {
         // Don't attempt to hash directories. Directories (which will only come up via symlinks btw)
         // will by extension be filtered out of the list.
         if (stats && !stats.isDirectory()) {
-          const hash = await this.hashObject(stats, file.path)
-          if (hash !== "") {
-            file.hash = hash
-            count++
-            files.push(file)
-            return
-          }
+          count++
+          const gitHandler = this
+          files.push({
+            path: file.path,
+            async hash(): Promise<string> {
+              return await gitHandler.hashObject(stats, file.path)
+            },
+          })
+          return
         }
       }
       count++
-      files.push(file)
+      files.push({
+        path: file.path,
+        hash(): Promise<string> {
+          return Promise.resolve(file.hash)
+        },
+      })
     }
 
     // This function is called for each line output from the ls-files commands that we run, and populates the

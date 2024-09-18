@@ -154,6 +154,12 @@ export interface VcsFile {
   hash: string
 }
 
+export interface VcsFileWithLazyHash {
+  path: string
+
+  hash(): Promise<string>
+}
+
 export interface VcsHandlerParams {
   garden?: Garden
   projectRoot: string
@@ -192,7 +198,7 @@ export abstract class VcsHandler {
    *
    * Does NOT sort the results by paths and filenames.
    */
-  abstract getFiles(params: GetFilesParams): Promise<VcsFile[]>
+  abstract getFiles(params: GetFilesParams): Promise<VcsFileWithLazyHash[]>
 
   abstract ensureRemoteSource(params: RemoteSourceParams): Promise<string>
 
@@ -276,15 +282,16 @@ export abstract class VcsHandler {
           // Don't include the config file in the file list
           .filter((f) => !configPath || f.path !== configPath)
 
-        let stringsForContentHash: string[]
+        let lazyStringsForContentHash: Promise<string>[]
         if (configPath) {
           // Include the relative path to the file to account for the file being renamed or moved around within the
           // config path (e.g. renaming).
           const configDir = dirname(configPath)
-          stringsForContentHash = files.map((f) => `${relative(configDir, f.path)}-${f.hash}`)
+          lazyStringsForContentHash = files.map(async (f) => `${relative(configDir, f.path)}-${await f.hash()}`)
         } else {
-          stringsForContentHash = files.map((f) => f.hash)
+          lazyStringsForContentHash = files.map(async (f) => f.hash())
         }
+        const stringsForContentHash = await Promise.all(lazyStringsForContentHash)
         result.contentHash = hashStrings(stringsForContentHash)
         result.files = files.map((f) => f.path)
       }
