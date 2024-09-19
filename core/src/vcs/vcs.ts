@@ -149,15 +149,31 @@ export interface RemoteSourceParams {
   failOnPrompt?: boolean
 }
 
-export interface VcsFile {
-  path: string
-  hash: string
-}
+const hashLock = new AsyncLock()
 
-export interface VcsFileWithLazyHash {
-  path: string
+export class VcsFile {
+  public readonly path: string
+  private readonly hashFn: () => Promise<string>
+  private calculatedHash: string | undefined
 
-  hash(): Promise<string>
+  constructor(path: string, hashFn: () => Promise<string>) {
+    this.path = path
+    this.hashFn = hashFn
+  }
+
+  async hash(): Promise<string> {
+    if (this.calculatedHash !== undefined) {
+      return Promise.resolve(this.calculatedHash)
+    }
+    return await hashLock.acquire(`calculate-hash-${this.path}`, async () => {
+      if (this.calculatedHash !== undefined) {
+        return this.calculatedHash
+      }
+      const hash = await this.hashFn()
+      this.calculatedHash = hash
+      return hash
+    })
+  }
 }
 
 export interface VcsHandlerParams {
@@ -198,7 +214,7 @@ export abstract class VcsHandler {
    *
    * Does NOT sort the results by paths and filenames.
    */
-  abstract getFiles(params: GetFilesParams): Promise<VcsFileWithLazyHash[]>
+  abstract getFiles(params: GetFilesParams): Promise<VcsFile[]>
 
   abstract ensureRemoteSource(params: RemoteSourceParams): Promise<string>
 

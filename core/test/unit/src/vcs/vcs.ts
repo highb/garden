@@ -6,14 +6,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type {
+import {
   GetFilesParams,
   GetTreeVersionParams,
   NamedModuleVersion,
   NamedTreeVersion,
   TreeVersion,
   TreeVersions,
-  VcsFileWithLazyHash,
+  VcsFile,
 } from "../../../../src/vcs/vcs.js"
 import {
   describeConfig,
@@ -50,7 +50,7 @@ export class TestVcsHandler extends VcsHandler {
     return "/foo"
   }
 
-  override async getFiles(_: GetFilesParams): Promise<VcsFileWithLazyHash[]> {
+  override async getFiles(_: GetFilesParams): Promise<VcsFile[]> {
     return []
   }
 
@@ -98,9 +98,9 @@ describe("VcsHandler", () => {
     it("should sort the list of files in the returned version", async () => {
       const moduleConfig = await gardenA.resolveModule("module-a")
       handlerA.getFiles = async () => [
-        { path: "c", hash: () => Promise.resolve("c") },
-        { path: "b", hash: () => Promise.resolve("b") },
-        { path: "d", hash: () => Promise.resolve("d") },
+        new VcsFile("c", () => Promise.resolve("c")),
+        new VcsFile("b", () => Promise.resolve("b")),
+        new VcsFile("d", () => Promise.resolve("d")),
       ]
       const version = await handlerA.getTreeVersion({
         log: gardenA.log,
@@ -113,9 +113,9 @@ describe("VcsHandler", () => {
     it("should not include the module config file in the file list", async () => {
       const moduleConfig = await gardenA.resolveModule("module-a")
       handlerA.getFiles = async () => [
-        { path: moduleConfig.configPath!, hash: () => Promise.resolve("c") },
-        { path: "b", hash: () => Promise.resolve("b") },
-        { path: "d", hash: () => Promise.resolve("d") },
+        new VcsFile(moduleConfig.configPath!, () => Promise.resolve("c")),
+        new VcsFile("b", () => Promise.resolve("b")),
+        new VcsFile("d", () => Promise.resolve("d")),
       ]
       const version = await handlerA.getTreeVersion({
         log: gardenA.log,

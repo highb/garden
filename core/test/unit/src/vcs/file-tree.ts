@@ -8,6 +8,7 @@
 
 import { expect } from "chai"
 import { FileTree } from "../../../../src/vcs/file-tree.js"
+import { VcsFile } from "../../../../src/vcs/vcs.js"
 
 async function emptyHash(): Promise<string> {
   return await Promise.resolve("")
@@ -18,29 +19,31 @@ describe("file-tree", () => {
     it("should get the files at a path", () => {
       const fileTree = FileTree.fromFiles(
         [
-          { path: "/Users/developer/code/garden-project/project-1/frontend", hash: emptyHash },
-          { path: "/Users/developer/code/garden-project/project-1/backend", hash: emptyHash },
-          { path: "/Users/developer/code/garden-project/project-2/frontend", hash: emptyHash },
-          { path: "/Users/developer/code/garden-project/project-2/backend", hash: emptyHash },
+          new VcsFile("/Users/developer/code/garden-project/project-1/frontend", emptyHash),
+          new VcsFile("/Users/developer/code/garden-project/project-1/backend", emptyHash),
+          new VcsFile("/Users/developer/code/garden-project/project-2/frontend", emptyHash),
+          new VcsFile("/Users/developer/code/garden-project/project-2/backend", emptyHash),
         ],
         "posix"
       )
 
       const filesAtProjectPath = fileTree.getFilesAtPath("/Users/developer/code/garden-project")
 
-      expect(filesAtProjectPath).to.eql([
-        { path: "/Users/developer/code/garden-project/project-1/frontend", hash: emptyHash },
-        { path: "/Users/developer/code/garden-project/project-1/backend", hash: emptyHash },
-        { path: "/Users/developer/code/garden-project/project-2/frontend", hash: emptyHash },
-        { path: "/Users/developer/code/garden-project/project-2/backend", hash: emptyHash },
-      ])
+      const expectedFilesAtProjectPath: VcsFile[] = [
+        new VcsFile("/Users/developer/code/garden-project/project-1/frontend", emptyHash),
+        new VcsFile("/Users/developer/code/garden-project/project-1/backend", emptyHash),
+        new VcsFile("/Users/developer/code/garden-project/project-2/frontend", emptyHash),
+        new VcsFile("/Users/developer/code/garden-project/project-2/backend", emptyHash),
+      ]
+      expect(filesAtProjectPath).to.eql(expectedFilesAtProjectPath)
 
       const filesAtFirstProjectPath = fileTree.getFilesAtPath("/Users/developer/code/garden-project/project-1")
 
-      expect(filesAtFirstProjectPath).to.eql([
-        { path: "/Users/developer/code/garden-project/project-1/frontend", hash: emptyHash },
-        { path: "/Users/developer/code/garden-project/project-1/backend", hash: emptyHash },
-      ])
+      const expectedFilesAtFirstProjectPath: VcsFile[] = [
+        new VcsFile("/Users/developer/code/garden-project/project-1/frontend", emptyHash),
+        new VcsFile("/Users/developer/code/garden-project/project-1/backend", emptyHash),
+      ]
+      expect(filesAtFirstProjectPath).to.eql(expectedFilesAtFirstProjectPath)
     })
   })
 
@@ -48,29 +51,31 @@ describe("file-tree", () => {
     it("should get the files at a path", () => {
       const fileTree = FileTree.fromFiles(
         [
-          { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", hash: emptyHash },
-          { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\backend", hash: emptyHash },
-          { path: "C:\\Users\\developer\\code\\garden-project\\project-2\\frontend", hash: emptyHash },
-          { path: "C:\\Users\\developer\\code\\garden-project\\project-2\\backend", hash: emptyHash },
+          new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", emptyHash),
+          new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\backend", emptyHash),
+          new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-2\\frontend", emptyHash),
+          new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-2\\backend", emptyHash),
         ],
         "win32"
       )
 
       const filesAtProjectPath = fileTree.getFilesAtPath("C:\\Users\\developer\\code\\garden-project")
 
-      expect(filesAtProjectPath).to.eql([
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", hash: emptyHash },
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\backend", hash: emptyHash },
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-2\\frontend", hash: emptyHash },
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-2\\backend", hash: emptyHash },
-      ])
+      const expectedFilesAtProjectPath: VcsFile[] = [
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", emptyHash),
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\backend", emptyHash),
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-2\\frontend", emptyHash),
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-2\\backend", emptyHash),
+      ]
+      expect(filesAtProjectPath).to.eql(expectedFilesAtProjectPath)
 
       const filesAtFirstProjectPath = fileTree.getFilesAtPath("C:\\Users\\developer\\code\\garden-project\\project-1")
 
-      expect(filesAtFirstProjectPath).to.eql([
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", hash: emptyHash },
-        { path: "C:\\Users\\developer\\code\\garden-project\\project-1\\backend", hash: emptyHash },
-      ])
+      const expectedFilesAreFirstProjectPath: VcsFile[] = [
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\frontend", emptyHash),
+        new VcsFile("C:\\Users\\developer\\code\\garden-project\\project-1\\backend", emptyHash),
+      ]
+      expect(filesAtFirstProjectPath).to.eql(expectedFilesAreFirstProjectPath)
     })
   })
 })

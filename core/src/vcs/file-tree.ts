@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import type { VcsFileWithLazyHash } from "./vcs.js"
+import type { VcsFile } from "./vcs.js"
 import type { PlatformPath } from "path"
 import * as posixPath from "path/posix"
 import * as winPath from "path/win32"
@@ -19,7 +19,7 @@ type FileTreeNodeOptions = {
 export class FileTreeNode {
   private readonly ownPath: string
   private readonly pathUtils: PlatformPath
-  private readonly files: VcsFileWithLazyHash[] = []
+  private readonly files: VcsFile[] = []
   private readonly childrenBySubpath: Map<string, FileTreeNode> = new Map()
 
   constructor({ ownPath, pathUtils }: FileTreeNodeOptions) {
@@ -31,7 +31,7 @@ export class FileTreeNode {
     return this.ownPath
   }
 
-  addFile(file: VcsFileWithLazyHash): boolean {
+  addFile(file: VcsFile): boolean {
     if (!file.path.startsWith(this.ownPath)) {
       return false
     }
@@ -65,7 +65,7 @@ export class FileTreeNode {
     return true
   }
 
-  getFiles(): VcsFileWithLazyHash[] {
+  getFiles(): VcsFile[] {
     return this.files
   }
 
@@ -102,7 +102,7 @@ export class FileTree {
     return currentNode
   }
 
-  getFilesAtPath(filesPath: string): VcsFileWithLazyHash[] {
+  getFilesAtPath(filesPath: string): VcsFile[] {
     if (this.root.getOwnPath() !== this.pathUtils.parse(filesPath).root) {
       return []
     }
@@ -123,7 +123,7 @@ export class FileTree {
     return node !== undefined
   }
 
-  static fromFiles(files: VcsFileWithLazyHash[], platform?: "win32" | "posix"): FileTree {
+  static fromFiles(files: VcsFile[], platform?: "win32" | "posix"): FileTree {
     // In theory, node picks the right utils automatically depending on platform
     // However, for testing, we need to be able to specify the platform explicitly here
     // else we cannot test for example for Windows on a Unix machine.

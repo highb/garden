@@ -19,12 +19,11 @@ import { renderDuration } from "../logger/util.js"
 import { pMemoizeDecorator } from "../lib/p-memoize.js"
 import parseGitConfig from "parse-git-config"
 import { AbstractGitHandler, augmentGlobs, GitCli } from "./git.js"
-import type {
+import {
   BaseIncludeExcludeFiles,
   GetFilesParams,
   IncludeExcludeFilesHandler,
   VcsFile,
-  VcsFileWithLazyHash,
   VcsHandlerParams,
 } from "./vcs.js"
 import { normalize } from "path"
@@ -34,7 +33,9 @@ const { lstat, pathExists, readlink, realpath, stat } = fsExtra
 
 const submoduleErrorSuggestion = `Perhaps you need to run ${styles.underline(`git submodule update --recursive`)}?`
 
-interface GitEntry extends VcsFile {
+interface GitEntry {
+  path: string
+  hash: string
   mode: string
 }
 
@@ -88,7 +89,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
    * Returns a list of files, along with file hashes, under the given path, taking into account the configured
    * .ignore files, and the specified include/exclude filters.
    */
-  override async getFiles(params: GetFilesParams): Promise<VcsFileWithLazyHash[]> {
+  override async getFiles(params: GetFilesParams): Promise<VcsFile[]> {
     if (params.include && params.include.length === 0) {
       // No need to proceed, nothing should be included
       return []
@@ -121,7 +122,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
     }
     const { exclude, hasIncludes, include } = await getIncludeExcludeFiles(params)
 
-    let files: VcsFileWithLazyHash[] = []
+    let files: VcsFile[] = []
 
     const git = new GitCli({ log: gitLog, cwd: path, failOnPrompt })
     const gitRoot = await this.getRepoRoot(gitLog, path, failOnPrompt)
@@ -163,7 +164,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
       gitLog.silly(`Submodules listed at ${submodules.map((s) => `${s.path} (${s.url})`).join(", ")}`)
     }
 
-    let submoduleFiles: Promise<VcsFileWithLazyHash[]>[] = []
+    let submoduleFiles: Promise<VcsFile[]>[] = []
 
     // We start processing submodule paths in parallel
     // and don't await the results until this level of processing is completed
@@ -219,29 +220,19 @@ export class GitSubTreeHandler extends AbstractGitHandler {
     // Make sure we have a fresh hash for each file
     let count = 0
 
-    const ensureHash = async (file: VcsFile, stats: fsExtra.Stats | undefined): Promise<void> => {
+    const ensureHash = async (file: GitEntry, stats: fsExtra.Stats | undefined): Promise<void> => {
       if (file.hash === "" || modified.has(file.path)) {
         // Don't attempt to hash directories. Directories (which will only come up via symlinks btw)
         // will by extension be filtered out of the list.
         if (stats && !stats.isDirectory()) {
           count++
           const gitHandler = this
-          files.push({
-            path: file.path,
-            async hash(): Promise<string> {
-              return await gitHandler.hashObject(stats, file.path)
-            },
-          })
+          files.push(new VcsFile(file.path, () => gitHandler.hashObject(stats, file.path)))
           return
         }
       }
       count++
-      files.push({
-        path: file.path,
-        hash(): Promise<string> {
-          return Promise.resolve(file.hash)
-        },
-      })
+      files.push(new VcsFile(file.path, () => Promise.resolve(file.hash)))
     }
 
     // This function is called for each line output from the ls-files commands that we run, and populates the
@@ -277,7 +268,7 @@ export class GitSubTreeHandler extends AbstractGitHandler {
       }
 
       // We push to the output array if it passes through the exclude filters.
-      const output = { path: resolvedPath, hash: hash || "" }
+      const output: GitEntry = { path: resolvedPath, hash: hash || "", mode: entry.mode }
 
       // No need to stat unless it has no hash, is a symlink, or is modified
       // Note: git ls-files always returns mode 120000 for symlinks
